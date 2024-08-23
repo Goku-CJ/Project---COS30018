@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DistanceMatrix {
 
-    private static final String API_KEY = "AIzaSyAbzrug6ZZfTJSEFpA8ff32FqLEoJDGEic";
+    private static final String API_KEY = "OUR API KEY";
     private static final List<String> ADDRESSES = List.of(
             "3610+Hacks+Cross+Rd+Memphis+TN", // depot
             "1921+Elvis+Presley+Blvd+Memphis+TN",
