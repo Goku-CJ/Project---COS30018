@@ -1,0 +1,96 @@
+
+#DEFINE LOCATIONS 
+locations = [
+    (0, 0),  # Depot
+    (228, 0),
+    (912, 0),
+    (0, 80),
+    (114, 80),
+    (570, 160),
+    (798, 160),
+    (342, 240),
+    (684, 240),
+    (570, 400),
+    (912, 400),
+    (114, 480),
+    (228, 480),
+    (342, 560),
+    (684, 560),
+    (0, 640),
+    (798, 640)
+]
+
+num_vehicles = 4
+max_deliveries_per_vehicle = 4
+
+#COMPUTE DISTANCE MATRIX
+import math
+
+def compute_euclidean_distance_matrix(locations):
+    size = len(locations)
+    distance_matrix = [[0] * size for _ in range(size)]
+    for i in range(size):
+        for j in range(size):
+            if i != j:
+                distance_matrix[i][j] = math.hypot(locations[i][0] - locations[j][0],
+                                                   locations[i][1] - locations[j][1])
+    return distance_matrix
+
+distance_matrix = compute_euclidean_distance_matrix(locations)
+
+#IMPLEMENT NEAREST NEIGHBOUR AND HEURISTIC
+def nearest_neighbor_route(start, num_stops, global_visited):
+    num_locations = len(distance_matrix)
+    route = [start]
+    current_location = start
+    local_visited = set([start])
+    
+    for _ in range(num_stops):
+        nearest_distance = float('inf')
+        nearest_location = None
+        for i in range(num_locations):
+            if i not in global_visited and i not in local_visited and distance_matrix[current_location][i] < nearest_distance:
+                nearest_distance = distance_matrix[current_location][i]
+                nearest_location = i
+        
+        if nearest_location is not None:
+            route.append(nearest_location)
+            local_visited.add(nearest_location)
+            global_visited.add(nearest_location)
+            current_location = nearest_location
+    
+    route.append(start)
+    return route
+
+#ASSIGN ROUTE TO VEHICLES
+def assign_routes(distance_matrix, num_vehicles, deliveries_per_vehicle):
+    routes = []
+    global_visited = set([0])  # Start with depot as visited
+    for _ in range(num_vehicles):
+        route = nearest_neighbor_route(start=0, num_stops=deliveries_per_vehicle, global_visited=global_visited)
+        routes.append(route)
+    return routes
+
+#CALCULATE AND PRINT SOLUTION
+def calculate_route_distance(route, distance_matrix):
+    total_distance = 0
+    for i in range(len(route) - 1):
+        total_distance += distance_matrix[route[i]][route[i + 1]]
+    return total_distance
+
+def print_solution(routes):
+    max_route_distance = 0
+    for vehicle_id, route in enumerate(routes):
+        route_distance = calculate_route_distance(route, distance_matrix)
+        print(f"Route for vehicle {vehicle_id}: {' -> '.join(map(str, route))}")
+        print(f"Distance of the route: {route_distance:.2f}m")
+        max_route_distance = max(max_route_distance, route_distance)
+    print(f"Maximum of the route distances: {max_route_distance:.2f}m")
+
+#MAIN FUNCTION
+def main():
+    routes = assign_routes(distance_matrix, num_vehicles, max_deliveries_per_vehicle)
+    print_solution(routes)
+
+if __name__ == '__main__':
+    main()
