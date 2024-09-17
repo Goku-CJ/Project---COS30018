@@ -1,0 +1,125 @@
+import matplotlib.pyplot as plt
+import math
+import csv
+
+# Function to read locations from a CSV file
+def read_locations_from_csv(file_path):
+    locations = []
+    with open(file_path, mode='r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        # Sort rows by 'id' to ensure the depot is first and order is maintained
+        sorted_rows = sorted(reader, key=lambda row: int(row['id']))
+        for row in sorted_rows:
+            x = float(row['x'])
+            y = float(row['y'])
+            locations.append((x, y))
+    return locations
+
+#COMPUTING DISTANCE USING EUCLIDEAN 
+def compute_euclidean_distance_matrix(locations):
+    size = len(locations)
+    distance_matrix = [[0] * size for _ in range(size)]
+    for i in range(size):
+        for j in range(size):
+            if i != j:
+                distance_matrix[i][j] = math.hypot(locations[i][0] - locations[j][0],
+                                                   locations[i][1] - locations[j][1])
+    return distance_matrix
+
+def nearest_neighbor_route(distance_matrix, start, num_stops, global_visited):
+    num_locations = len(distance_matrix)
+    route = [start]
+    current_location = start
+    
+    # Local visited for this vehicle
+    local_visited = set()
+    local_visited.add(start)
+    
+    # Find nearest neighbor for num_stops deliveries
+    for _ in range(num_stops):
+        nearest_distance = float('inf')
+        nearest_location = None
+        for i in range(num_locations):
+            if i not in global_visited and i not in local_visited and distance_matrix[current_location][i] < nearest_distance:
+                nearest_distance = distance_matrix[current_location][i]
+                nearest_location = i
+        
+        # If we find a nearest unvisited location
+        if nearest_location is not None:
+            route.append(nearest_location)
+            local_visited.add(nearest_location)
+            global_visited.add(nearest_location)
+            current_location = nearest_location
+    
+    # Return to the start (depot)
+    route.append(start)
+    return route
+
+def assign_routes(distance_matrix, num_vehicles, deliveries_per_vehicle):
+    routes = []
+    global_visited = set([0])  # Start with depot as visited
+    for vehicle_id in range(num_vehicles):
+        route = nearest_neighbor_route(distance_matrix, start=0, num_stops=deliveries_per_vehicle, global_visited=global_visited)
+        routes.append(route)
+    return routes
+
+def plot_routes(locations, routes, distance_matrix):
+    num_locations = len(locations)
+    
+    # Extract x and y coordinates
+    x_coords, y_coords = zip(*locations)
+    
+    # Plot locations
+    plt.figure(figsize=(12, 10))
+    plt.scatter(x_coords, y_coords, color='blue', marker='o', s=100, zorder=5)
+    
+    # Label each location
+    for i, (x, y) in enumerate(locations):
+        plt.text(x, y, f' {i}', fontsize=12, ha='right')
+    
+    # Define a color palette
+    colors = ['red', 'green', 'blue', 'orange', 'purple', 'cyan', 'magenta', 'yellow']
+    
+    # Plot routes for each vehicle
+    for vehicle_id, route in enumerate(routes):
+        color = colors[vehicle_id % len(colors)]  # Cycle through colors if more vehicles
+        route_x = [x_coords[i] for i in route]
+        route_y = [y_coords[i] for i in route]
+        plt.plot(route_x, route_y, color=color, marker='o', linestyle='-', linewidth=2, markersize=8, label=f'Vehicle {vehicle_id + 1}')
+        
+        # Annotate distances and add arrows
+        for i in range(len(route) - 1):
+            dx = route_x[i + 1] - route_x[i]
+            dy = route_y[i + 1] - route_y[i]
+            plt.arrow(route_x[i], route_y[i], dx, dy,
+                      head_width=10, head_length=10, fc=color, ec=color, alpha=0.6, zorder=3)
+            plt.text((route_x[i] + route_x[i + 1]) / 2, (route_y[i] + route_y[i + 1]) / 2,
+                     f'{distance_matrix[route[i]][route[i + 1]]:.1f}', fontsize=8, color='black', zorder=3)
+    
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Optimized Routes for Each Vehicle')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def main():
+    # Path to your CSV file
+    file_path = 'locations.csv'
+    
+    # Read locations from the CSV file
+    locations = read_locations_from_csv(file_path)
+    
+    # Compute the distance matrix
+    distance_matrix = compute_euclidean_distance_matrix(locations)
+    
+    # Assign routes to vehicles
+    num_vehicles = 4
+    deliveries_per_vehicle = 4
+    routes = assign_routes(distance_matrix, num_vehicles, deliveries_per_vehicle)
+    
+    # Plot the routes
+    plot_routes(locations, routes, distance_matrix)
+
+if __name__ == "__main__":
+    main()
