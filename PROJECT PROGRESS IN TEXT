@@ -12,8 +12,24 @@ FAULTS IN OUR PROJECT :
 3. CAPACITY OF EACH VEHICLE SHOULDE BE INSERTED
 4. GUI FOR THE PROGRAM
 
+
 QUESTIONS WE HAVE :
 
 1.DOES OUR OWN SEARCH OPTIMIZATION ONLY CREATE THE BEST ROUTE FOR THE DA?
 2.ARE WE GOING TO USE REAL ADDRESSES FOR THE PROGRAM OR LOCATION COORDINATES?
 3.HOW DOES THE COST CALCULATE FOR THE ROUTE?
+
+
+
+
+Week 10---------------------
+
+01. Have a distance constraint on the locations so that it can be gone back to central 
+
+02. Have different distances for each vehicle
+
+03. All distances must be considered with the going back distance from the locations.
+
+04. Have a GUI on the no. of deliveries which is ongoing and having a clear undestanding of the vehicle capacity.
+
+05. Keep the deliveries larger than the capacity so that the vehicle is required to go back to central.
