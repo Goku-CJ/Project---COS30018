@@ -1,1 +1,85 @@
+#MODEL 2 - INTERACTIVE GUI 
+import sys
+from PyQt5.QtWidgets import QApplication, QVBoxLayout, QWidget, QPushButton, QLabel, QLineEdit, QHBoxLayout
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import numpy as np
+
+# Dummy function for route plotting (you can replace this with your routing logic)
+def plot_routes(vehicle_routes):
+    fig, ax = plt.subplots()
+
+    colors = ['red', 'green', 'blue', 'orange']
+    
+    for vehicle_id, route in enumerate(vehicle_routes):
+        # Just generating random x and y for demo (replace with actual locations)
+        x = np.random.randint(0, 100, len(route))
+        y = np.random.randint(0, 100, len(route))
+        
+        ax.plot(x, y, marker='o', color=colors[vehicle_id % len(colors)], label=f'Vehicle {vehicle_id + 1}')
+        
+        for i, txt in enumerate(route):
+            ax.annotate(txt, (x[i], y[i]))
+
+    ax.set_xlabel("X Coordinates")
+    ax.set_ylabel("Y Coordinates")
+    ax.legend()
+    ax.grid(True)
+    plt.show()
+
+# Main window class
+class RoutePlanner(QWidget):
+    def __init__(self):
+        super().__init__()
+        
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Vehicle Routing Optimizer')
+        
+        layout = QVBoxLayout()
+
+        # Instructions label
+        self.instructions = QLabel("Enter location numbers for each vehicle (comma-separated):")
+        layout.addWidget(self.instructions)
+
+        # Input fields for vehicle routes
+        self.route_inputs = []
+        for i in range(4):  # Assuming 4 vehicles
+            hbox = QHBoxLayout()
+            label = QLabel(f"Vehicle {i + 1}: ")
+            input_field = QLineEdit()
+            self.route_inputs.append(input_field)
+            hbox.addWidget(label)
+            hbox.addWidget(input_field)
+            layout.addLayout(hbox)
+        
+        # Plot Button
+        self.plot_button = QPushButton('Plot Routes')
+        self.plot_button.clicked.connect(self.on_plot_click)
+        layout.addWidget(self.plot_button)
+        
+        # Set layout to the main window
+        self.setLayout(layout)
+    
+    def on_plot_click(self):
+        # Gather vehicle routes from input fields
+        vehicle_routes = []
+        for input_field in self.route_inputs:
+            route_str = input_field.text()
+            route_list = [int(x) for x in route_str.split(',') if x.strip().isdigit()]  # Convert to integers
+            vehicle_routes.append(route_list)
+        
+        # Plot the routes
+        plot_routes(vehicle_routes)
+
+# Application execution
+def main():
+    app = QApplication(sys.argv)
+    window = RoutePlanner()
+    window.show()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
 
