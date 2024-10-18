@@ -24,12 +24,12 @@ QUESTIONS WE HAVE :
 
 Week 10---------------------
 
-01. Have a distance constraint on the locations so that it can be gone back to central 
+01. Have a distance constraint on the locations so that it can be gone back to central ✅
 
-02. Have different distances for each vehicle
+02. Have different distances for each vehicle 
 
-03. All distances must be considered with the going back distance from the locations.
+03. All distances must be considered with the going back distance from the locations. ✅
 
-04. Have a GUI on the no. of deliveries which is ongoing and having a clear undestanding of the vehicle capacity.
+04. Have a GUI on the no. of deliveries which is ongoing and having a clear undestanding of the vehicle capacity. ✅
 
-05. Keep the deliveries larger than the capacity so that the vehicle is required to go back to central.
+05. Keep the deliveries larger than the capacity so that the vehicle is required to go back to central. ✅
