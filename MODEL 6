@@ -1,0 +1,141 @@
+import sys
+import random
+import matplotlib.pyplot as plt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QLabel, QPushButton, QFormLayout
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+class Vehicle:
+    def __init__(self, vehicle_id, max_distance, deliveries_per_run):
+        self.vehicle_id = vehicle_id
+        self.max_distance = max_distance
+        self.deliveries_per_run = deliveries_per_run
+        self.routes = []
+
+    def calculate_routes(self, locations):
+        depot = (50, 50)  # New depot location
+        route = []
+        total_distance = 0
+        deliveries_count = 0
+
+        for loc in list(locations):
+            if deliveries_count >= self.deliveries_per_run:
+                break  # Stop if we've hit the max deliveries for this run
+
+            distance_to_loc = (((loc[0] - depot[0])**2 + (loc[1] - depot[1])**2)**0.5)
+            round_trip_distance = distance_to_loc * 2  # Account for the return trip
+
+            if total_distance + round_trip_distance <= self.max_distance:
+                route.append(loc)
+                total_distance += round_trip_distance
+                deliveries_count += 1
+                locations.remove(loc)
+
+        if route:
+            self.routes.append(route)
+            if total_distance < self.max_distance and locations:
+                self.calculate_routes(locations)  # Recurse with remaining locations if we have distance left
+
+def generate_unique_locations(num_locations):
+    locations = set()
+    while len(locations) < num_locations:
+        new_location = (random.randint(0, 100), random.randint(0, 100), random.randint(1, 5))
+        locations.add(new_location)
+    return list(locations)
+
+def route_planning(vehicles, locations, total_deliveries):
+    # Distribute deliveries
+    while locations and total_deliveries > 0:
+        for vehicle in vehicles:
+            if total_deliveries <= 0:
+                break
+            vehicle.calculate_routes(locations)
+            total_deliveries -= sum(len(route) for route in vehicle.routes)
+
+class RouteApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Vehicle Routing System')
+        self.setGeometry(100, 100, 1200, 800)
+        widget = QWidget(self)
+        self.setCentralWidget(widget)
+        layout = QVBoxLayout(widget)
+
+        layout.addWidget(QLabel('Number of Vehicles'))
+        self.vehicle_count = QLineEdit("0")  # Start with 0 vehicles
+        layout.addWidget(self.vehicle_count)
+        self.vehicle_count.textChanged.connect(self.update_vehicle_inputs)
+
+        layout.addWidget(QLabel('Total Deliveries'))
+        self.total_deliveries = QLineEdit("0")  # Start with 0 total deliveries
+        layout.addWidget(self.total_deliveries)
+
+        self.vehicle_settings_layout = QFormLayout()
+        layout.addLayout(self.vehicle_settings_layout)
+
+        calc_btn = QPushButton('Generate Routes')
+        calc_btn.clicked.connect(self.calculate_routes)
+        layout.addWidget(calc_btn)
+
+        self.figure = plt.Figure()
+        self.canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.canvas)
+
+        self.max_distances = []
+        self.deliveries_per_runs = []
+
+    def update_vehicle_inputs(self):
+        vehicle_count = int(self.vehicle_count.text() if self.vehicle_count.text().isdigit() else 0)
+        while self.vehicle_settings_layout.count():
+            child = self.vehicle_settings_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        self.max_distances = []
+        self.deliveries_per_runs = []
+        for i in range(vehicle_count):
+            max_distance = QLineEdit("300")
+            deliveries_per_run = QLineEdit("10")
+            self.max_distances.append(max_distance)
+            self.deliveries_per_runs.append(deliveries_per_run)
+            self.vehicle_settings_layout.addRow(f'Vehicle {i+1} Max Distance (km):', max_distance)
+            self.vehicle_settings_layout.addRow(f'Vehicle {i+1} Deliveries per Run:', deliveries_per_run)
+
+    def calculate_routes(self):
+        distances = [int(md.text()) for md in self.max_distances]
+        deliveries_per_run = [int(dp.text()) for dp in self.deliveries_per_runs]
+        total_deliveries = int(self.total_deliveries.text())
+        vehicles = [Vehicle(f'Vehicle {i+1}', distances[i], deliveries_per_run[i]) for i in range(len(distances))]
+        locations = generate_unique_locations(40)  # Generate 40 unique locations
+
+        route_planning(vehicles, locations, total_deliveries)
+        self.plot_routes(vehicles)
+
+    def plot_routes(self, vehicles):
+        ax = self.figure.add_subplot(111)
+        ax.clear()  # Clear previous plot
+        depot = (50, 50)  # Central depot coordinates
+        ax.plot(depot[0], depot[1], 'ro')  # Mark the depot
+        for vehicle in vehicles:
+            for route in vehicle.routes:
+                x = [depot[0]] + [loc[0] for loc in route] + [depot[0]]
+                y = [depot[1]] + [loc[1] for loc in route] + [depot[1]]
+                ax.plot(x, y, marker='o', linestyle='-', label=f'{vehicle.vehicle_id} Route')
+                for loc in route:
+                    ax.text(loc[0], loc[1], f'Del {loc[2]}', color='blue', fontsize=9)
+
+        ax.set_title('Vehicle Routes')
+        ax.set_xlim(0, 100)
+        ax.set_ylim(0, 100)
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.legend()
+        self.canvas.draw()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = RouteApp()
+    ex.show()
+    sys.exit(app.exec_())
